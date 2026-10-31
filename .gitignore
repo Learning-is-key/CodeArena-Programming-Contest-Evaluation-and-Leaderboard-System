@@ -1,0 +1,8 @@
+target/
+*.class
+.idea/
+.vscode/
+.DS_Store
+
+# Generated submission files
+submissions/*/

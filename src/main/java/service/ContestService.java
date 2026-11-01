@@ -1,58 +1,126 @@
 package service;
 
 import database.DBConnection;
-import model.Contest;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import model.Contest;
 
 public class ContestService {
 
-    public boolean addContest(String name, String description,
-                              Timestamp startTime, Timestamp endTime)
-            throws SQLException {
+  public boolean addContest(String name, String description, Timestamp startTime, Timestamp endTime)
+      throws SQLException {
 
-        String sql = "INSERT INTO contests "
-                + "(contest_name, description, start_time, end_time, status) "
-                + "VALUES (?, ?, ?, ?, 'UPCOMING')";
+    String sql =
+        "INSERT INTO contests "
+            + "(contest_name, description, start_time, end_time, status) "
+            + "VALUES (?, ?, ?, ?, 'UPCOMING')";
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+    try (Connection con = DBConnection.getConnection();
+        PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setString(1, name);
-            ps.setString(2, description);
-            ps.setTimestamp(3, startTime);
-            ps.setTimestamp(4, endTime);
+      ps.setString(1, name);
+      ps.setString(2, description);
+      ps.setTimestamp(3, startTime);
+      ps.setTimestamp(4, endTime);
 
-            return ps.executeUpdate() == 1;
-        }
+      return ps.executeUpdate() == 1;
+    }
+  }
+
+  public List<Contest> getAllContests() throws SQLException {
+    List<Contest> contests = new ArrayList<>();
+
+    String sql = "SELECT * FROM contests ORDER BY contest_id";
+
+    try (Connection con = DBConnection.getConnection();
+        PreparedStatement ps = con.prepareStatement(sql);
+        ResultSet rs = ps.executeQuery()) {
+
+      while (rs.next()) {
+        Timestamp start = rs.getTimestamp("start_time");
+        Timestamp end = rs.getTimestamp("end_time");
+
+        contests.add(
+            new Contest(
+                rs.getInt("contest_id"),
+                rs.getString("contest_name"),
+                rs.getString("description"),
+                start == null ? null : start.toLocalDateTime(),
+                end == null ? null : end.toLocalDateTime(),
+                rs.getString("status")));
+      }
     }
 
-    public List<Contest> getAllContests() throws SQLException {
-        List<Contest> contests = new ArrayList<>();
+    return contests;
+  }
 
-        String sql = "SELECT * FROM contests ORDER BY contest_id";
+  public Contest getContestById(int contestId) throws SQLException {
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+    String sql = "SELECT * FROM contests WHERE contest_id = ?";
 
-            while (rs.next()) {
-                Timestamp start = rs.getTimestamp("start_time");
-                Timestamp end = rs.getTimestamp("end_time");
+    try (Connection con = DBConnection.getConnection();
+        PreparedStatement ps = con.prepareStatement(sql)) {
 
-                contests.add(new Contest(
-                        rs.getInt("contest_id"),
-                        rs.getString("contest_name"),
-                        rs.getString("description"),
-                        start == null ? null : start.toLocalDateTime(),
-                        end == null ? null : end.toLocalDateTime(),
-                        rs.getString("status")
-                ));
-            }
+      ps.setInt(1, contestId);
+
+      try (ResultSet rs = ps.executeQuery()) {
+
+        if (rs.next()) {
+          Timestamp start = rs.getTimestamp("start_time");
+          Timestamp end = rs.getTimestamp("end_time");
+
+          return new Contest(
+              rs.getInt("contest_id"),
+              rs.getString("contest_name"),
+              rs.getString("description"),
+              start == null ? null : start.toLocalDateTime(),
+              end == null ? null : end.toLocalDateTime(),
+              rs.getString("status"));
         }
-
-        return contests;
+      }
     }
+
+    return null;
+  }
+
+  public boolean updateContest(
+      int contestId, String name, String description, Timestamp startTime, Timestamp endTime)
+      throws SQLException {
+
+    String sql =
+        """
+        UPDATE contests
+        SET contest_name = ?,
+            description = ?,
+            start_time = ?,
+            end_time = ?
+        WHERE contest_id = ?
+        """;
+
+    try (Connection con = DBConnection.getConnection();
+        PreparedStatement ps = con.prepareStatement(sql)) {
+
+      ps.setString(1, name);
+      ps.setString(2, description);
+      ps.setTimestamp(3, startTime);
+      ps.setTimestamp(4, endTime);
+      ps.setInt(5, contestId);
+
+      return ps.executeUpdate() == 1;
+    }
+  }
+
+  public boolean deleteContest(int contestId) throws SQLException {
+
+    String sql = "DELETE FROM contests WHERE contest_id = ?";
+
+    try (Connection con = DBConnection.getConnection();
+        PreparedStatement ps = con.prepareStatement(sql)) {
+
+      ps.setInt(1, contestId);
+
+      return ps.executeUpdate() == 1;
+    }
+  }
 }

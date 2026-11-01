@@ -1,0 +1,159 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Submission Details | CodeArena</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 40px;
+            background: #0b1120;
+            color: #e2e8f0;
+            font-family: Arial, sans-serif;
+        }
+        .container { max-width: 950px; margin: auto; }
+        h1 { color: #60a5fa; }
+        .card {
+            background: #111c32;
+            border: 1px solid #263650;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 22px;
+        }
+        .info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 18px;
+        }
+        .info div {
+            background: #1e293b;
+            padding: 16px;
+            border-radius: 8px;
+        }
+        .label { color: #94a3b8; font-size: 13px; }
+        .value { display: block; margin-top: 8px; font-size: 19px; }
+        pre {
+            background: #020617;
+            border: 1px solid #263650;
+            border-radius: 8px;
+            padding: 20px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            color: #a5f3fc;
+            line-height: 1.6;
+        }
+        a {
+            display: inline-block;
+            margin-top: 24px;
+            background: #2563eb;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h1>Submission Details</h1>
+    <p style="color:#94a3b8">
+        Review your submitted solution and evaluation result.
+    </p>
+
+    <p th:if="${error}" th:text="${error}"></p>
+
+    <div th:if="${submission != null}">
+
+        <div class="card">
+            <h2>Evaluation Summary</h2>
+
+            <div class="info">
+                <div>
+                    <span class="label">Submission ID</span>
+                    <strong class="value"
+                            th:text="${submission.submissionId}"></strong>
+                </div>
+
+                <div>
+                    <span class="label">Status</span>
+                    <strong class="value"
+                            th:text="${submission.status}"></strong>
+                </div>
+
+                <div>
+                    <span class="label">Score</span>
+                    <strong class="value"
+                            th:text="${submission.score}"></strong>
+                </div>
+
+                <div>
+                    <span class="label">Tests Passed</span>
+                    <strong class="value">
+                        <span th:text="${submission.passedTests}"></span> /
+                        <span th:text="${submission.totalTests}"></span>
+                    </strong>
+                </div>
+            </div>
+
+            <p style="color:#94a3b8"
+               th:text="${submission.submittedAt}"></p>
+        </div>
+
+        <div class="card">
+            <h2>Submitted Java Code</h2>
+            <pre th:text="${sourceCode}"></pre>
+        </div>
+        <section class="card">
+    <h2>Test Case Results</h2>
+
+    <div th:if="${testResults == null or #lists.isEmpty(testResults)}">
+        <p>No individual test results available.</p>
+    </div>
+
+    <div th:unless="${testResults == null or #lists.isEmpty(testResults)}"
+         style="overflow-x: auto;">
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Test ID</th>
+                    <th>Input</th>
+                    <th>Expected Output</th>
+                    <th>Actual Output</th>
+                    <th>Status</th>
+                    <th>Marks</th>
+                    <th>Execution Time</th>
+                    <th>Error</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr th:each="result : ${testResults}">
+                    <td th:text="${result.testId}"></td>
+                    <td><pre th:text="${result.inputData}"></pre></td>
+                    <td><pre th:text="${result.expectedOutput}"></pre></td>
+                    <td><pre th:text="${result.actualOutput}"></pre></td>
+                    <td th:text="${result.resultStatus}"></td>
+                    <td th:text="${result.marksAwarded}"></td>
+                    <td th:text="${result.executionTimeMs + ' ms'}"></td>
+                    <td>
+                        <span th:if="${result.errorMessage != null and !#strings.isEmpty(result.errorMessage)}"
+                              th:text="${result.errorMessage}"></span>
+                        <span th:unless="${result.errorMessage != null and !#strings.isEmpty(result.errorMessage)}">—</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+    </div>
+
+    <a href="/submissions">Back to Submission History</a>
+
+</div>
+</body>
+</html>

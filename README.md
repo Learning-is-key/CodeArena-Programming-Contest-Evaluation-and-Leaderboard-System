@@ -1,169 +1,205 @@
-# Programming Contest Evaluation and Leaderboard System
+# CodeArena – Programming Contest Evaluation and Leaderboard System
 
-## 1. Project Overview
+## Overview
 
-The **Programming Contest Evaluation and Leaderboard System** is a Java-based application designed to conduct programming contests, accept Java code submissions, evaluate them against predefined test cases, and rank participants based on their scores.
+CodeArena is a web-based Programming Contest Evaluation and Leaderboard System developed using Java, Spring Boot, Thymeleaf, JDBC, and MariaDB.
 
-The system automates the evaluation process and provides participants with their submission results and leaderboard rankings.
+The system allows participants to register, log in, view programming contests, solve coding questions, submit Java programs, and receive evaluation results based on predefined test cases.
 
-## 2. Objectives
+It also provides an administrator dashboard for managing contests, questions, and test cases, along with a leaderboard that ranks participants according to their performance.
 
-- Manage users and programming contests.
-- Store programming questions and test cases.
-- Accept Java source-code submissions.
-- Automatically compile and execute submitted programs.
-- Evaluate outputs against expected results.
-- Calculate scores and percentages.
-- Generate a ranked leaderboard.
+## Objectives
 
-## 3. Technologies Used
+- Provide a platform for conducting programming contests.
+- Evaluate Java submissions against predefined test cases.
+- Calculate scores based on test-case results.
+- Maintain submission history and individual test-case results.
+- Rank participants using their best scores.
+- Provide administrative controls for contest management.
+
+## Technology Stack
 
 | Technology | Purpose |
 |---|---|
-| Java | Application development |
-| Java Swing | Graphical user interface |
+| Java 17 | Core application logic |
+| Spring Boot 3.5.6 | Backend application framework |
+| Spring MVC | Request handling and routing |
+| Thymeleaf | Dynamic web pages |
+| HTML and CSS | User interface |
 | JDBC | Database connectivity |
 | MariaDB | Relational database |
 | Maven | Dependency and build management |
 | Java Collections | Managing application data |
-| Java Stream API | Sorting and processing leaderboard data |
-| File Handling | Saving submitted source code |
-| ProcessBuilder | Compiling and executing Java submissions |
+| Stream API | Data processing and sorting |
+| File Handling | Storing submitted Java source files |
+| ProcessBuilder | Compiling and executing submissions |
 
-## 4. System Architecture
+## System Modules
 
-The application follows a layered architecture.
-
-1. **Frontend Layer:** Provides the user interface through Java Swing and a command-line interface.
-2. **Service Layer:** Handles user management, contests, questions, submissions, evaluation and leaderboard operations.
-3. **Model Layer:** Represents entities such as User, Contest, Question, TestCase and Submission.
-4. **Database Layer:** Connects to MariaDB through JDBC and stores application data.
-
-## 5. Main Modules
-
-### User Management
+### 1. User Authentication
 - User registration and login.
-- Password hashing and verification.
+- Password hashing using PBKDF2.
+- Session-based authentication.
+- Role-based access for participants and administrators.
 
-### Contest Management
-- Create and retrieve programming contests.
-- Store contest details and status.
+### 2. Contest Management
+- Display available contests.
+- View contest questions and descriptions.
+- Access input and output formats for programming problems.
 
-### Question Management
-- Add programming questions.
-- Store descriptions, input formats, output formats and maximum marks.
+### 3. Submission and Evaluation
+- Accept Java source-code submissions.
+- Store submitted source files.
+- Compile and execute programs using ProcessBuilder.
+- Evaluate submissions against predefined test cases.
+- Calculate marks for passed test cases.
+- Identify compilation errors, incorrect answers, runtime errors, and time-limit violations.
 
-### Test Case Management
-- Store input and expected output for each question.
-- Assign marks to individual test cases.
+### 4. Submission History
+- Display previous submissions.
+- Show submission status and scores.
+- View individual test-case results.
+- Display expected and actual outputs.
 
-### Submission Management
-- Accept Java source code.
-- Save submissions as Java files.
-- Maintain submission history and status.
+### 5. Leaderboard
+- Calculate participants' best scores for each question.
+- Calculate total scores and percentages.
+- Rank participants in descending order of performance.
+- Use Java Collections and Stream API for data processing.
 
-### Evaluation Engine
-- Compile submitted Java programs.
-- Execute programs against predefined test cases.
-- Compare actual and expected outputs.
-- Calculate marks based on passed test cases.
+### 6. Administrator Dashboard
+- Create and manage contests.
+- Add, edit, and delete questions.
+- Add, edit, and delete test cases.
+- Manage contest information through an administrative interface.
 
-### Leaderboard
-- Calculate participants' total scores.
-- Calculate percentages.
-- Sort participants using Java Streams.
-- Display rankings.
+## Database Design
 
-## 6. Database Design
+The application uses MariaDB with the following tables:
 
-The system uses MariaDB with the following main tables:
+| Table | Purpose |
+|---|---|
+| users | Stores user accounts and roles |
+| contests | Stores programming contest details |
+| questions | Stores contest programming questions |
+| test_cases | Stores input, expected output, and marks |
+| submissions | Stores submission records and evaluation summaries |
+| submission_test_results | Stores individual test-case evaluation results |
 
-- `users` – Stores participant and account information.
-- `contests` – Stores contest details.
-- `questions` – Stores programming questions.
-- `test_cases` – Stores test inputs, expected outputs and marks.
-- `submissions` – Stores submission details, scores and evaluation status.
+Foreign-key relationships maintain consistency between contests, questions, test cases, submissions, and users.
 
-The tables are connected through primary keys and foreign keys.
-
-## 7. Evaluation and Score Calculation
-
-Each submitted program is compiled and executed against the test cases associated with its question.
-
-The score is calculated by adding the marks of successfully passed test cases.
-
-**Percentage formula:**
-
-Percentage = (Total Score / Maximum Possible Score) × 100
-
-The leaderboard sorts participants based on their total scores.
-
-## 8. Project Structure
+## Project Structure
 
 ```text
-ProgrammingContestSystem/
-├── pom.xml
-├── README.md
-├── submissions/
-├── testcases/
-└── src/main/java/
-    ├── Main.java
-    ├── database/
-    ├── model/
-    ├── service/
-    └── frontend/
-        └── ContestApp.java
+src/
+├── main/
+│   ├── java/
+│   │   ├── database/
+│   │   │   └── DBConnection.java
+│   │   ├── model/
+│   │   │   ├── Contest.java
+│   │   │   ├── LeaderboardEntry.java
+│   │   │   ├── Question.java
+│   │   │   ├── Submission.java
+│   │   │   ├── SubmissionTestResult.java
+│   │   │   ├── TestCase.java
+│   │   │   └── User.java
+│   │   ├── service/
+│   │   │   ├── ContestService.java
+│   │   │   ├── EvaluationEngine.java
+│   │   │   ├── LeaderboardService.java
+│   │   │   ├── QuestionService.java
+│   │   │   ├── SubmissionService.java
+│   │   │   ├── SubmissionTestResultService.java
+│   │   │   ├── TestCaseService.java
+│   │   │   └── UserService.java
+│   │   └── web/
+│   │       ├── AdminController.java
+│   │       ├── ApiController.java
+│   │       ├── AuthController.java
+│   │       ├── BrowserApplication.java
+│   │       ├── ContestController.java
+│   │       ├── DashboardController.java
+│   │       ├── HealthController.java
+│   │       ├── LeaderboardController.java
+│   │       └── SubmissionController.java
+│   └── resources/
+│       ├── templates/
+│       │   ├── admin.html
+│       │   ├── contest-details.html
+│       │   ├── dashboard.html
+│       │   ├── leaderboard.html
+│       │   ├── login.html
+│       │   ├── register.html
+│       │   ├── submission-details.html
+│       │   ├── submission-history.html
+│       │   └── submission-result.html
+│       └── application.properties
+└── test/
 ```
 
-## 9. How to Run
+## Setup and Execution
 
 ### Prerequisites
-- Java JDK 17 or later
+
+- Java 17 or later
 - Maven
 - MariaDB
+- Git
 
-### Step 1: Start MariaDB
+### 1. Clone the repository
+
+```bash
+git clone <repository-url>
+cd Programming-Contest-Evaluation-and-Leaderboard-System
+```
+
+### 2. Start MariaDB
 
 ```bash
 sudo service mariadb start
 ```
 
-### Step 2: Configure the Database
+### 3. Configure the database
 
-Create the `programming_contest` database and configure the database connection details in:
+Create the database and configure the required tables and relationships.
+
+The application expects these environment variables:
+
+```bash
+export DB_URL="jdbc:mariadb://localhost:3306/programming_contest"
+export DB_USER="cbp_user"
+export DB_PASSWORD="your_database_password"
+```
+
+Replace the password with the password configured for your MariaDB user.
+
+### 4. Run the application
+
+```bash
+mvn spring-boot:run
+```
+
+### 5. Open the application
+
+Visit:
 
 ```text
-src/main/java/database/DBConnection.java
+http://localhost:8080
 ```
 
-Ensure that the required tables and relationships are created before running the application.
+In GitHub Codespaces, open the forwarded port 8080.
 
-### Step 3: Compile the Project
+## Important Implementation Notes
 
-```bash
-mvn clean compile
-```
+- Database operations are performed using JDBC.
+- Java source files are stored in the application's submissions directory.
+- Evaluation uses Java compiler and execution processes through ProcessBuilder.
+- The leaderboard uses the best submission score for each question.
+- Database relationships help maintain consistency between application records.
 
-### Step 4: Run the Command-Line Application
+**Execution Security:** The current evaluator executes submitted Java programs directly on the host machine. It is intended for controlled demonstrations with trusted submissions, not public deployment with arbitrary untrusted code. Production deployment would require an isolated execution environment and additional security controls.
 
-```bash
-mvn org.codehaus.mojo:exec-maven-plugin:3.5.0:java -Dexec.mainClass=Main
-```
+## Conclusion
 
-### Step 5: Run the Swing Application
-
-On a machine with a graphical desktop:
-
-```bash
-mvn org.codehaus.mojo:exec-maven-plugin:3.5.0:java -Dexec.mainClass=frontend.ContestApp
-```
-
-## 10. Important Note
-
-The current evaluation engine uses Java ProcessBuilder to compile and execute submitted programs. It is intended for a controlled academic demonstration using trusted submissions. It does not provide a secure sandbox for arbitrary untrusted code.
-
-## 11. Conclusion
-
-The project demonstrates how Java programming, database connectivity, file handling, collections, streams and process execution can be integrated to build an automated programming contest evaluation system.
-
-It reduces manual evaluation effort and provides an organized way to manage programming contests, submissions, scores and participant rankings.
+CodeArena demonstrates the integration of Java programming, database connectivity, web application development, file handling, collections, and algorithmic evaluation in a programming contest platform. It provides participants with automated submission evaluation and performance rankings while allowing administrators to manage contest activities.

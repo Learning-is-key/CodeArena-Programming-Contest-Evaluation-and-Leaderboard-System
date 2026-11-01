@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin Dashboard | CodeArena</title>
+ 
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+ 
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #0b1120;
+            color: #e2e8f0;
+        }
+ 
+        header {
+            background: #111c32;
+            padding: 20px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #263650;
+        }
+ 
+        header h2 {
+            margin: 0;
+            color: #60a5fa;
+        }
+ 
+        header a {
+            color: #93c5fd;
+            text-decoration: none;
+        }
+ 
+        .container {
+            max-width: 1150px;
+            margin: 35px auto;
+            padding: 0 22px;
+        }
+ 
+        .intro {
+            margin-bottom: 28px;
+        }
+ 
+        .intro h1 {
+            margin-bottom: 8px;
+            font-size: 30px;
+        }
+ 
+        .muted {
+            color: #94a3b8;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+ 
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 22px;
+            align-items: start;
+        }
+ 
+        .panel {
+            background: #162238;
+            border: 1px solid #293b57;
+            border-radius: 14px;
+            padding: 24px;
+        }
+ 
+        .panel h2,
+        .section h2 {
+            margin-top: 0;
+            color: #93c5fd;
+            font-size: 20px;
+        }
+ 
+        label {
+            display: block;
+            margin: 14px 0 7px;
+            color: #cbd5e1;
+            font-size: 14px;
+        }
+ 
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #40516c;
+            border-radius: 7px;
+            background: #0f172a;
+            color: white;
+            font: inherit;
+        }
+ 
+        textarea {
+            resize: vertical;
+            min-height: 75px;
+        }
+ 
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+ 
+        button {
+            width: 100%;
+            margin-top: 18px;
+            padding: 12px;
+            border: 0;
+            border-radius: 7px;
+            background: #2563eb;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+ 
+        button:hover {
+            background: #1d4ed8;
+        }
+ 
+        button.delete-btn {
+            background: #991b1b;
+        }
+ 
+        button.delete-btn:hover {
+            background: #dc2626;
+        }
+ 
+        .notice {
+            padding: 13px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+        }
+ 
+        .success {
+            background: #14532d;
+            color: #bbf7d0;
+        }
+ 
+        .error {
+            background: #7f1d1d;
+            color: #fecaca;
+        }
+ 
+        .section {
+            margin-top: 38px;
+        }
+ 
+        .section-heading {
+            margin-bottom: 18px;
+        }
+ 
+        .empty-message {
+            color: #94a3b8;
+            padding: 15px;
+            background: #162238;
+            border-radius: 9px;
+        }
+ 
+        .contest-card {
+            background: #162238;
+            border: 1px solid #293b57;
+            border-radius: 12px;
+            padding: 18px;
+            margin: 16px 0;
+            overflow-wrap: anywhere;
+        }
+ 
+        .contest-dropdown {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            border: none;
+        }
+ 
+        .contest-dropdown > summary {
+            cursor: pointer;
+            color: #60a5fa;
+            font-size: 19px;
+            font-weight: bold;
+            padding: 10px;
+            background: #111c32;
+            border: 1px solid #40516c;
+            border-radius: 8px;
+        }
+ 
+        .contest-dropdown[open] > summary {
+            border-color: #3b82f6;
+        }
+ 
+        .contest-info {
+            padding: 12px 5px;
+        }
+ 
+        .contest-info p {
+            line-height: 1.6;
+        }
+ 
+        .contest-actions {
+            margin-bottom: 20px;
+        }
+ 
+        .contest-questions {
+            margin-top: 20px;
+            padding: 18px;
+            background: #0b1120;
+            border: 1px solid #293b57;
+            border-radius: 10px;
+        }
+ 
+        .contest-questions > h3 {
+            color: #93c5fd;
+            margin-top: 0;
+        }
+ 
+        .question-card {
+            margin-top: 16px;
+            padding: 18px;
+            background: #162238;
+            border: 1px solid #40516c;
+            border-radius: 9px;
+            overflow-wrap: anywhere;
+        }
+ 
+        .question-card h4 {
+            color: #e2e8f0;
+            margin-top: 0;
+            font-size: 17px;
+        }
+ 
+        .question-card p {
+            line-height: 1.6;
+        }
+ 
+        details {
+            margin-top: 15px;
+            padding: 13px;
+            background: #0f172a;
+            border: 1px solid #40516c;
+            border-radius: 8px;
+        }
+ 
+        details summary {
+            color: #93c5fd;
+            cursor: pointer;
+            font-weight: bold;
+            padding: 5px;
+        }
+ 
+        details form {
+            margin-top: 15px;
+        }
+ 
+        .test-case-dropdown {
+            margin-top: 20px;
+            background: #0f172a;
+            border: 1px solid #40516c;
+            border-radius: 9px;
+            padding: 14px;
+        }
+ 
+        .test-case-dropdown > summary {
+            color: #60a5fa;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+ 
+        .test-case-section {
+            margin-top: 18px;
+            padding: 14px;
+            background: #111c32;
+            border: 1px solid #293b57;
+            border-radius: 9px;
+        }
+ 
+        .test-case-card {
+            background: #162238;
+            border: 1px solid #40516c;
+            border-radius: 8px;
+            padding: 14px;
+            margin-top: 12px;
+        }
+ 
+        .test-case-card pre {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            color: #e2e8f0;
+            background: #0b1120;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+        }
+ 
+        .add-test-case {
+            border-color: #2563eb;
+        }
+ 
+        @media(max-width: 600px) {
+            header {
+                padding: 18px;
+            }
+ 
+            .container {
+                margin-top: 22px;
+                padding: 0 15px;
+            }
+ 
+            .grid {
+                grid-template-columns: 1fr;
+            }
+ 
+            .intro h1 {
+                font-size: 25px;
+            }
+        }
+    </style>
+</head>
+ 
+<body>
+ 
+<header>
+    <h2>CodeArena Admin</h2>
+    <a href="/">Participant Dashboard</a>
+</header>
+ 
+<div class="container">
+ 
+    <div class="intro">
+        <h1>Admin Dashboard</h1>
+        <p class="muted">
+            Create contests, manage questions and configure test cases.
+        </p>
+    </div>
+ 
+    <p class="notice success"
+       th:if="${success}" th:text="${success}"></p>
+ 
+    <p class="notice error"
+       th:if="${error}" th:text="${error}"></p>
+ 
+    <!-- MANAGE CONTESTS -->
+ 
+    <section class="section">
+ 
+        <h2 class="section-heading">Manage Contests</h2>
+ 
+        <!-- CREATE CONTEST -->
+        <section class="panel">
+            <h2>Create Contest</h2>
+ 
+            <form action="/admin/contests" method="post">
+ 
+                <label>Contest Name</label>
+                <input type="text" name="name" required>
+ 
+                <label>Description</label>
+                <textarea name="description" rows="3" required></textarea>
+ 
+                <label>Start Time</label>
+                <input type="datetime-local" name="startTime" required>
+ 
+                <label>End Time</label>
+                <input type="datetime-local" name="endTime" required>
+ 
+                <button type="submit">Create Contest</button>
+            </form>
+        </section>
+ 
+        <div th:if="${#lists.isEmpty(contests)}"
+             class="empty-message">
+            No contests created yet.
+        </div>
+ 
+        <!-- EACH CONTEST -->
+        <div th:each="contest : ${contests}" class="contest-card">
+ 
+            <details class="contest-dropdown">
+ 
+                <summary>
+                    <span th:text="${contest.contestName}"></span>
+                    <span class="muted">
+                        (Contest ID:
+                        <span th:text="${contest.contestId}"></span>)
+                    </span>
+                </summary>
+ 
+                <div class="contest-info">
+ 
+                    <p th:text="${contest.description}"></p>
+ 
+                    <p class="muted">
+                        Status:
+                        <strong th:text="${contest.status}"></strong>
+                    </p>
+ 
+                    <!-- EDIT CONTEST -->
+                    <details>
+                        <summary>Edit Contest</summary>
+ 
+                        <form action="/admin/contests/update" method="post">
+ 
+                            <input type="hidden" name="contestId"
+                                   th:value="${contest.contestId}">
+ 
+                            <label>Contest Name</label>
+                            <input type="text" name="name"
+                                   th:value="${contest.contestName}" required>
+ 
+                            <label>Description</label>
+                            <textarea name="description"
+                                      th:text="${contest.description}"
+                                      required></textarea>
+ 
+                            <label>Start Time</label>
+                            <input type="datetime-local" name="startTime"
+                                   th:value="${#temporals.format(contest.startTime, 'yyyy-MM-dd''T''HH:mm')}"
+                                   required>
+ 
+                            <label>End Time</label>
+                            <input type="datetime-local" name="endTime"
+                                   th:value="${#temporals.format(contest.endTime, 'yyyy-MM-dd''T''HH:mm')}"
+                                   required>
+ 
+                            <button type="submit">Save Contest Changes</button>
+                        </form>
+                    </details>
+ 
+                    <!-- ADD QUESTION TO THIS CONTEST -->
+                    <details class="add-test-case">
+                        <summary>+ Add Question</summary>
+ 
+                        <form action="/admin/questions" method="post">
+ 
+                            <input type="hidden" name="contestId"
+                                   th:value="${contest.contestId}">
+ 
+                            <label>Question Title</label>
+                            <input type="text" name="title" required>
+ 
+                            <label>Problem Description</label>
+                            <textarea name="description" rows="3" required></textarea>
+ 
+                            <label>Input Format</label>
+                            <textarea name="inputFormat" rows="2" required></textarea>
+ 
+                            <label>Output Format</label>
+                            <textarea name="outputFormat" rows="2" required></textarea>
+ 
+                            <label>Maximum Marks</label>
+                            <input type="number" name="maxMarks" min="1" required>
+ 
+                            <button type="submit">Add Question</button>
+                        </form>
+                    </details>
+ 
+                    <!-- QUESTIONS INSIDE THIS CONTEST -->
+                    <div class="contest-questions">
+ 
+                        <h3>
+                            Questions
+                            (<span th:text="${#lists.size(questionsByContest.get(contest.contestId))}"></span>)
+                        </h3>
+ 
+                        <div th:if="${#lists.isEmpty(questionsByContest.get(contest.contestId))}"
+                             class="empty-message">
+                            No questions added to this contest yet.
+                        </div>
+ 
+                        <!-- EACH QUESTION -->
+                        <div th:each="question : ${questionsByContest.get(contest.contestId)}"
+                             class="question-card">
+ 
+                            <h4 th:text="${question.title}"></h4>
+ 
+                            <p th:text="${question.description}"></p>
+ 
+                            <p class="muted">
+                                Question ID:
+                                <strong th:text="${question.questionId}"></strong>
+                                |
+                                Maximum Marks:
+                                <strong th:text="${question.maxMarks}"></strong>
+                            </p>
+ 
+                            <!-- EDIT QUESTION -->
+                            <details>
+                                <summary>Edit Question</summary>
+ 
+                                <form action="/admin/questions/update" method="post">
+ 
+                                    <input type="hidden" name="questionId"
+                                           th:value="${question.questionId}">
+ 
+                                    <label>Question Title</label>
+                                    <input type="text" name="title"
+                                           th:value="${question.title}" required>
+ 
+                                    <label>Description</label>
+                                    <textarea name="description"
+                                              th:text="${question.description}"
+                                              required></textarea>
+ 
+                                    <label>Input Format</label>
+                                    <textarea name="inputFormat"
+                                              th:text="${question.inputFormat}"
+                                              required></textarea>
+ 
+                                    <label>Output Format</label>
+                                    <textarea name="outputFormat"
+                                              th:text="${question.outputFormat}"
+                                              required></textarea>
+ 
+                                    <label>Maximum Marks</label>
+                                    <input type="number" name="maxMarks"
+                                           th:value="${question.maxMarks}"
+                                           min="1" required>
+ 
+                                    <button type="submit">Save Question Changes</button>
+                                </form>
+                            </details>
+ 
+                            <!-- ADD TEST CASE TO THIS QUESTION -->
+                            <details class="add-test-case">
+                                <summary>+ Add Test Case</summary>
+ 
+                                <form action="/admin/test-cases" method="post">
+ 
+                                    <input type="hidden" name="questionId"
+                                           th:value="${question.questionId}">
+ 
+                                    <label>Input Data</label>
+                                    <textarea name="input" required></textarea>
+ 
+                                    <label>Expected Output</label>
+                                    <textarea name="expectedOutput" required></textarea>
+ 
+                                    <label>Marks</label>
+                                    <input type="number" name="marks"
+                                           min="1" required>
+ 
+                                    <button type="submit">Add Test Case</button>
+                                </form>
+                            </details>
+ 
+                            <!-- TEST CASES INSIDE THIS QUESTION -->
+                            <details class="test-case-dropdown">
+ 
+                                <summary>
+                                    Manage Test Cases
+                                    (<span th:text="${#lists.size(testCasesByQuestion.get(question.questionId))}"></span>)
+                                </summary>
+ 
+                                <div class="test-case-section">
+ 
+                                    <div th:if="${#lists.isEmpty(testCasesByQuestion.get(question.questionId))}"
+                                         class="muted">
+                                        No test cases added yet.
+                                    </div>
+ 
+                                    <!-- EACH TEST CASE -->
+                                    <div th:each="tc : ${testCasesByQuestion.get(question.questionId)}"
+                                         class="test-case-card">
+ 
+                                        <p>
+                                            <strong>Test Case #</strong>
+                                            <span th:text="${tc.testId}"></span>
+                                            |
+                                            <strong>Marks:</strong>
+                                            <span th:text="${tc.marks}"></span>
+                                        </p>
+ 
+                                        <p class="muted">Input:</p>
+                                        <pre th:text="${tc.inputData}"></pre>
+ 
+                                        <p class="muted">Expected Output:</p>
+                                        <pre th:text="${tc.expectedOutput}"></pre>
+ 
+                                        <!-- EDIT TEST CASE -->
+                                        <details>
+                                            <summary>Edit Test Case</summary>
+ 
+                                            <form action="/admin/test-cases/update"
+                                                  method="post">
+ 
+                                                <input type="hidden" name="testId"
+                                                       th:value="${tc.testId}">
+ 
+                                                <label>Input</label>
+                                                <textarea name="input"
+                                                          th:text="${tc.inputData}"
+                                                          required></textarea>
+ 
+                                                <label>Expected Output</label>
+                                                <textarea name="expectedOutput"
+                                                          th:text="${tc.expectedOutput}"
+                                                          required></textarea>
+ 
+                                                <label>Marks</label>
+                                                <input type="number" name="marks"
+                                                       min="0"
+                                                       th:value="${tc.marks}"
+                                                       required>
+ 
+                                                <button type="submit">
+                                                    Save Test Case Changes
+                                                </button>
+                                            </form>
+                                        </details>
+ 
+                                        <!-- DELETE TEST CASE -->
+                                        <form action="/admin/test-cases/delete"
+                                              method="post"
+                                              onsubmit="return confirm('Delete this test case?');">
+ 
+                                            <input type="hidden" name="testId"
+                                                   th:value="${tc.testId}">
+ 
+                                            <button type="submit" class="delete-btn">
+                                                Delete Test Case
+                                            </button>
+                                        </form>
+ 
+                                    </div>
+                                </div>
+                            </details>
+ 
+                            <!-- DELETE QUESTION -->
+                            <form action="/admin/questions/delete"
+                                  method="post"
+                                  onsubmit="return confirm('Delete this question?');">
+ 
+                                <input type="hidden" name="questionId"
+                                       th:value="${question.questionId}">
+ 
+                                <button type="submit" class="delete-btn">
+                                    Delete Question
+                                </button>
+                            </form>
+ 
+                        </div>
+                    </div>
+ 
+                    <!-- DELETE CONTEST -->
+                    <form action="/admin/contests/delete" method="post"
+                          onsubmit="return confirm('Are you sure you want to delete this contest?');">
+ 
+                        <input type="hidden" name="contestId"
+                               th:value="${contest.contestId}">
+ 
+                        <button type="submit" class="delete-btn">
+                            Delete Contest
+                        </button>
+                    </form>
+ 
+                </div>
+            </details>
+        </div>
+    </section>
+ 
+</div>
+ 
+</body>
+</html>

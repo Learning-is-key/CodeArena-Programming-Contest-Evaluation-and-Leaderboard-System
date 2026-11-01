@@ -1,0 +1,129 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contest Details | CodeArena</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 30px;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+        a { color: #60a5fa; text-decoration: none; }
+        .panel {
+            background: #1e293b;
+            padding: 24px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        .question {
+            background: #263449;
+            padding: 18px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .tag {
+            color: #93c5fd;
+            font-weight: bold;
+        }
+        pre {
+            white-space: pre-wrap;
+            color: #cbd5e1;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <p><a href="/">← Back to Dashboard</a></p>
+
+    <div th:if="${error}" class="panel">
+        <p th:text="${error}"></p>
+    </div>
+
+    <div th:if="${contest != null}">
+        <h1 th:text="${contest.contestName}">Contest Name</h1>
+
+        <div class="panel">
+            <p th:text="${contest.description}"></p>
+            <div style="margin: 20px 0;">
+    <a th:href="@{/contests/{id}/leaderboard(id=${contest.contestId})}"
+       style="background: #2563eb;
+              color: white;
+              padding: 12px 20px;
+              border-radius: 8px;
+              text-decoration: none;">
+        View Leaderboard
+    </a>
+</div>
+            <p>Start:
+                <span th:text="${contest.startTime}"></span>
+            </p>
+            <p>End:
+                <span th:text="${contest.endTime}"></span>
+            </p>
+            <p>Status:
+                <span class="tag" th:text="${contest.status}"></span>
+            </p>
+        </div>
+
+        <h2>Programming Questions</h2>
+
+        <div th:if="${#lists.isEmpty(questions)}" class="panel">
+            No questions have been added to this contest yet.
+        </div>
+
+        <div th:each="question, iter : ${questions}" class="question">
+            <h3>
+                <span th:text="${iter.count}"></span>.
+                <span th:text="${question.title}"></span>
+            </h3>
+
+            <p th:text="${question.description}"></p>
+
+            <p class="tag">Input Format</p>
+            <pre th:text="${question.inputFormat}"></pre>
+
+            <p class="tag">Output Format</p>
+            <pre th:text="${question.outputFormat}"></pre>
+
+            <p>
+                Maximum Marks:
+                <strong th:text="${question.maxMarks}"></strong>
+            </p>
+            <hr>
+
+<h3>Submit Your Java Solution</h3>
+
+<p>Use a public class named <code>Main</code>.</p>
+
+<form th:action="@{/questions/{id}/submit(id=${question.questionId})}"
+      method="post">
+
+    <textarea name="sourceCode"
+              rows="15"
+              cols="70"
+              required
+              placeholder="public class Main {
+    public static void main(String[] args) {
+        // Write your solution here
+    }
+}"></textarea>
+
+    <br><br>
+    <button type="submit">Submit Code</button>
+</form>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

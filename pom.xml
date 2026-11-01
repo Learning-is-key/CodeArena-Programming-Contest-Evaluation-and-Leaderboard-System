@@ -23,9 +23,8 @@
     <dependencies>
 
         <dependency>
-            <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-spring-boot-starter</artifactId>
-            <version>24.9.6</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
 
         <!-- Browser communication and REST APIs -->
@@ -40,6 +39,13 @@
             <artifactId>mariadb-java-client</artifactId>
             <version>3.5.3</version>
         </dependency>
+
+        <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+</dependency>
+
     </dependencies>
 
     <build>

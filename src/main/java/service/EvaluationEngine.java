@@ -1,209 +1,193 @@
 package service;
 
 import database.DBConnection;
-import model.TestCase;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import model.TestCase;
 
 public class EvaluationEngine {
 
-    private final TestCaseService testCaseService = new TestCaseService();
-    private final SubmissionService submissionService = new SubmissionService();
+  private final SubmissionService submissionService = new SubmissionService();
 
-    public void evaluateSubmission(int submissionId) throws Exception {
+  private final TestCaseService testCaseService = new TestCaseService();
 
-        String sourceFile;
-        int questionId;
+  private final SubmissionTestResultService resultService = new SubmissionTestResultService();
 
-        String sql = "SELECT source_file, question_id FROM submissions "
-                   + "WHERE submission_id = ?";
+  public void evaluateSubmission(int submissionId) throws Exception {
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+    int questionId;
+    String sourceFile;
 
-            ps.setInt(1, submissionId);
+    try (Connection con = DBConnection.getConnection();
+        PreparedStatement ps =
+            con.prepareStatement(
+                "SELECT question_id, source_file FROM submissions WHERE submission_id = ?")) {
 
-            try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) {
-                    throw new SQLException("Submission not found.");
-                }
+      ps.setInt(1, submissionId);
 
-                sourceFile = rs.getString("source_file");
-                questionId = rs.getInt("question_id");
-            }
+      try (ResultSet rs = ps.executeQuery()) {
+        if (!rs.next()) {
+          throw new SQLException("Submission not found.");
         }
 
-        Path source = Paths.get(sourceFile).toAbsolutePath();
+        questionId = rs.getInt("question_id");
+        sourceFile = rs.getString("source_file");
+      }
+    }
 
-        if (!Files.exists(source)) {
-            throw new IOException("Submitted source file not found.");
-        }
+    List<TestCase> testCases = testCaseService.getTestCasesByQuestion(questionId);
 
-        List<TestCase> testCases =
-                testCaseService.getTestCasesByQuestion(questionId);
+    resultService.clearResults(submissionId);
 
-        int totalTests = testCases.size();
-        int passedTests = 0;
-        double score = 0;
-        String status = "WRONG_ANSWER";
+    if (testCases.isEmpty()) {
+      submissionService.updateEvaluation(submissionId, 0, 0, 0, "NO_TEST_CASES");
+      return;
+    }
 
-        if (totalTests == 0) {
-            submissionService.updateEvaluation(
-                    submissionId, 0, 0, 0, "NO_TEST_CASES");
-            System.out.println("No test cases available.");
-            return;
-        }
+    Path sourcePath = Path.of(sourceFile);
+    Path workingDirectory = sourcePath.getParent();
 
-        Path buildDirectory = source.getParent().resolve("build");
-        Files.createDirectories(buildDirectory);
+    Path compileLog = workingDirectory.resolve("compile-output.txt");
 
-        Path compileLog = buildDirectory.resolve("compile.log");
-
-        Process compileProcess = new ProcessBuilder(
-                "javac",
-                "-encoding", "UTF-8",
-                "-d", buildDirectory.toString(),
-                source.toString()
-        )
-        .redirectErrorStream(true)
-        .redirectOutput(compileLog.toFile())
-        .start();
-
-        boolean compiledInTime =
-                compileProcess.waitFor(15, TimeUnit.SECONDS);
-
-        if (!compiledInTime) {
-            compileProcess.destroyForcibly();
-
-            submissionService.updateEvaluation(
-                    submissionId, 0, 0, totalTests,
-                    "COMPILE_TIMEOUT");
-
-            System.out.println("Compilation timed out.");
-            return;
-        }
-
-        if (compileProcess.exitValue() != 0) {
-            String error = Files.readString(
-                    compileLog, StandardCharsets.UTF_8);
-
-            submissionService.updateEvaluation(
-                    submissionId, 0, 0, totalTests,
-                    "COMPILE_ERROR");
-
-            System.out.println("Compilation failed:");
-            System.out.println(error);
-            return;
-        }
-
-        System.out.println("\nCompilation successful!");
-        System.out.println("\n===== TEST RESULTS =====");
-
-        for (TestCase testCase : testCases) {
-
-            Path inputFile = buildDirectory.resolve(
-                    "input_" + testCase.getTestId() + ".txt");
-
-            Path outputFile = buildDirectory.resolve(
-                    "output_" + testCase.getTestId() + ".txt");
-
-            Path errorFile = buildDirectory.resolve(
-                    "error_" + testCase.getTestId() + ".txt");
-
-            Files.writeString(
-                    inputFile,
-                    testCase.getInputData(),
-                    StandardCharsets.UTF_8
-            );
-
-            Process runProcess = new ProcessBuilder(
-                    "java",
-                    "-cp", buildDirectory.toString(),
-                    "Main"
-            )
-            .redirectInput(inputFile.toFile())
-            .redirectOutput(outputFile.toFile())
-            .redirectError(errorFile.toFile())
+    Process compileProcess =
+        new ProcessBuilder("javac", sourcePath.getFileName().toString())
+            .directory(workingDirectory.toFile())
+            .redirectErrorStream(true)
+            .redirectOutput(compileLog.toFile())
             .start();
 
-            boolean finished =
-                    runProcess.waitFor(3, TimeUnit.SECONDS);
+    boolean compiled = compileProcess.waitFor(15, TimeUnit.SECONDS);
 
-            if (!finished) {
-                runProcess.destroyForcibly();
+    if (!compiled) {
+      compileProcess.destroyForcibly();
 
-                status = "TIME_LIMIT_EXCEEDED";
-                System.out.println("Test " + testCase.getTestId()
-                        + ": TIME LIMIT EXCEEDED");
-                break;
-            }
+      saveAllTestResults(submissionId, testCases, "COMPILE_TIMEOUT", "Compilation timed out.");
 
-            if (runProcess.exitValue() != 0) {
-                status = "RUNTIME_ERROR";
-
-                System.out.println("Test " + testCase.getTestId()
-                        + ": RUNTIME ERROR");
-
-                System.out.println(Files.readString(
-                        errorFile, StandardCharsets.UTF_8));
-
-                break;
-            }
-
-            String actualOutput = Files.readString(
-                    outputFile, StandardCharsets.UTF_8);
-
-            String expectedOutput = testCase.getExpectedOutput();
-
-            if (normalize(actualOutput).equals(
-                    normalize(expectedOutput))) {
-
-                passedTests++;
-                score += testCase.getMarks();
-
-                System.out.println("Test " + testCase.getTestId()
-                        + ": PASSED");
-
-            } else {
-                System.out.println("Test " + testCase.getTestId()
-                        + ": FAILED");
-                System.out.println("Expected: " + expectedOutput);
-                System.out.println("Actual: " + actualOutput);
-            }
-        }
-
-        if (status.equals("WRONG_ANSWER")) {
-            if (passedTests == totalTests) {
-                status = "ACCEPTED";
-            } else if (passedTests > 0) {
-                status = "PARTIAL";
-            }
-        }
-
-        submissionService.updateEvaluation(
-                submissionId,
-                score,
-                passedTests,
-                totalTests,
-                status
-        );
-
-        System.out.println("\n===== EVALUATION SUMMARY =====");
-        System.out.println("Submission ID: " + submissionId);
-        System.out.println("Passed Tests: " + passedTests
-                + "/" + totalTests);
-        System.out.println("Score: " + score);
-        System.out.println("Status: " + status);
+      submissionService.updateEvaluation(submissionId, 0, 0, testCases.size(), "COMPILE_ERROR");
+      return;
     }
 
-    private String normalize(String output) {
-        return output.replace("\r\n", "\n")
-                     .trim()
-                     .replaceAll("\\s+", " ");
+    String compileOutput = Files.readString(compileLog);
+
+    if (compileProcess.exitValue() != 0) {
+      saveAllTestResults(submissionId, testCases, "COMPILE_ERROR", compileOutput);
+
+      submissionService.updateEvaluation(submissionId, 0, 0, testCases.size(), "COMPILE_ERROR");
+      return;
     }
+
+    int passedTests = 0;
+    double totalScore = 0;
+    boolean hasTimeout = false;
+    boolean hasRuntimeError = false;
+
+    for (TestCase testCase : testCases) {
+
+      Path inputFile = workingDirectory.resolve("input.txt");
+      Files.writeString(inputFile, testCase.getInputData());
+
+      long startTime = System.nanoTime();
+
+      Path outputFile = workingDirectory.resolve("output-" + testCase.getTestId() + ".txt");
+
+      Process runProcess =
+          new ProcessBuilder("sh", "-c", "ulimit -f 2048; exec java Main")
+              .directory(workingDirectory.toFile())
+              .redirectErrorStream(true)
+              .redirectInput(inputFile.toFile())
+              .redirectOutput(outputFile.toFile())
+              .start();
+
+      boolean completed = runProcess.waitFor(3, TimeUnit.SECONDS);
+      long executionTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
+
+      String actualOutput = "";
+      String errorMessage = "";
+      String resultStatus;
+      double marksAwarded = 0;
+
+      if (!completed) {
+        runProcess.destroyForcibly();
+        hasTimeout = true;
+        resultStatus = "TIME_LIMIT_EXCEEDED";
+        errorMessage = "Execution exceeded 3 seconds.";
+
+      } else {
+        String output = Files.readString(outputFile);
+
+        if (runProcess.exitValue() != 0) {
+          hasRuntimeError = true;
+          resultStatus = "RUNTIME_ERROR";
+          errorMessage = output;
+
+        } else {
+          actualOutput = output.trim();
+
+          if (normalize(actualOutput).equals(normalize(testCase.getExpectedOutput()))) {
+
+            resultStatus = "PASSED";
+            passedTests++;
+            marksAwarded = testCase.getMarks();
+
+          } else {
+            resultStatus = "FAILED";
+          }
+        }
+      }
+
+      totalScore += marksAwarded;
+
+      resultService.saveResult(
+          submissionId,
+          testCase.getTestId(),
+          testCase.getInputData(),
+          testCase.getExpectedOutput(),
+          actualOutput,
+          resultStatus,
+          marksAwarded,
+          executionTime,
+          errorMessage);
+    }
+
+    String status;
+
+    if (passedTests == testCases.size()) {
+      status = "ACCEPTED";
+    } else if (passedTests > 0) {
+      status = "PARTIAL";
+    } else if (hasTimeout) {
+      status = "TIME_LIMIT_EXCEEDED";
+    } else if (hasRuntimeError) {
+      status = "RUNTIME_ERROR";
+    } else {
+      status = "WRONG_ANSWER";
+    }
+
+    submissionService.updateEvaluation(
+        submissionId, totalScore, passedTests, testCases.size(), status);
+  }
+
+  private void saveAllTestResults(
+      int submissionId, List<TestCase> testCases, String status, String error) throws SQLException {
+
+    for (TestCase testCase : testCases) {
+      resultService.saveResult(
+          submissionId,
+          testCase.getTestId(),
+          testCase.getInputData(),
+          testCase.getExpectedOutput(),
+          "",
+          status,
+          0,
+          0,
+          error);
+    }
+  }
+
+  private String normalize(String output) {
+    return output.trim().replaceAll("\\s+", " ");
+  }
 }

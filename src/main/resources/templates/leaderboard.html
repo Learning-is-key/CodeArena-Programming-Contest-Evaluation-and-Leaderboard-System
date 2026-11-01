@@ -1,0 +1,99 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Leaderboard | CodeArena</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: white;
+            padding: 35px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        h1 {
+            color: #60a5fa;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+            background: #1e293b;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #334155;
+        }
+
+        th {
+            background: #2563eb;
+        }
+
+        tr:hover {
+            background: #334155;
+        }
+
+        .empty {
+            padding: 20px;
+            background: #1e293b;
+            border-radius: 8px;
+        }
+
+        a {
+            color: #60a5fa;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <h1>CodeArena Leaderboard</h1>
+    <p>Contest Rankings</p>
+
+    <p th:if="${error}" th:text="${error}"></p>
+
+    <table th:if="${leaderboard != null and !leaderboard.isEmpty()}">
+        <thead>
+        <tr>
+            <th>Rank</th>
+            <th>Participant</th>
+            <th>Total Score</th>
+            <th>Percentage</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="entry : ${leaderboard}">
+            <td th:text="${entry.rank}"></td>
+            <td th:text="${entry.username}"></td>
+            <td th:text="${entry.totalScore}"></td>
+            <td th:text="${#numbers.formatDecimal(entry.percentage, 1, 2)} + '%'"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <p class="empty"
+       th:if="${leaderboard != null and leaderboard.isEmpty()}">
+        No participants have been ranked yet.
+    </p>
+
+    <br>
+    <a th:href="@{/contests/{id}(id=${contestId})}">
+        Back to Contest
+    </a>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,59 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CodeArena | Login</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; min-height: 100vh; display: grid;
+            place-items: center; font-family: Arial, sans-serif;
+            background: #0f172a; color: #f8fafc;
+        }
+        .card {
+            width: min(90%, 400px); padding: 35px;
+            background: #1e293b; border: 1px solid #334155;
+            border-radius: 14px;
+        }
+        h1 { color: #38bdf8; margin-top: 0; }
+        p { color: #94a3b8; }
+        input {
+            width: 100%; padding: 13px; margin: 9px 0 17px;
+            border: 1px solid #475569; border-radius: 7px;
+            background: #0f172a; color: white;
+        }
+        button {
+            width: 100%; padding: 13px; border: 0;
+            border-radius: 7px; background: #0284c7;
+            color: white; font-weight: bold; cursor: pointer;
+        }
+        a { color: #38bdf8; }
+        .error { color: #f87171; }
+        .success { color: #4ade80; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>CodeArena</h1>
+    <h2>Welcome back</h2>
+    <p>Log in to continue competing.</p>
+
+    <p class="error" th:if="${error}" th:text="${error}"></p>
+    <p class="success" th:if="${success}" th:text="${success}"></p>
+
+    <form action="/login" method="post">
+        <label>Username</label>
+        <input type="text" name="username" required>
+
+        <label>Password</label>
+        <input type="password" name="password" required>
+
+        <button type="submit">Log In</button>
+    </form>
+
+    <p>New to CodeArena? <a href="/register">Create an account</a></p>
+</div>
+</body>
+</html>

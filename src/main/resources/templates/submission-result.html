@@ -1,0 +1,65 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Submission Result | CodeArena</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: white;
+            padding: 40px;
+        }
+        .result {
+            max-width: 550px;
+            margin: 40px auto;
+            padding: 30px;
+            background: #1e293b;
+            border-radius: 14px;
+        }
+        .stat {
+            padding: 12px;
+            margin: 10px 0;
+            background: #334155;
+            border-radius: 8px;
+        }
+        a { color: #60a5fa; }
+    </style>
+</head>
+<body>
+<div class="result">
+    <h1>Submission Result</h1>
+
+    <p th:if="${error}" th:text="${error}"></p>
+
+    <div th:if="${submission != null}">
+        <div class="stat">
+            Submission ID:
+            <strong th:text="${submission.submissionId}"></strong>
+        </div>
+        <div class="stat">
+            Status:
+            <strong th:text="${submission.status}"></strong>
+        </div>
+        <div class="stat">
+            Score:
+            <strong th:text="${submission.score}"></strong>
+        </div>
+        <div class="stat">
+            Test Cases Passed:
+            <strong th:text="${submission.passedTests}"></strong>
+            /
+            <strong th:text="${submission.totalTests}"></strong>
+        </div>
+        <div class="stat">
+            Submitted At:
+            <span th:text="${submission.submittedAt}"></span>
+        </div>
+    </div>
+
+    <br>
+    <a href="/">Back to Dashboard</a>
+</div>
+</body>
+</html>

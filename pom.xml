@@ -21,6 +21,13 @@
     </properties>
 
     <dependencies>
+
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-spring-boot-starter</artifactId>
+            <version>24.9.6</version>
+        </dependency>
+
         <!-- Browser communication and REST APIs -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
